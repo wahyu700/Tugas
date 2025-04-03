@@ -32,40 +32,18 @@ $stmt->bind_param("i", $id);
 $stmt->execute();
 $result = $stmt->get_result();
 
+// Periksa apakah user ditemukan
 if ($result->num_rows > 0) {
     $user = $result->fetch_assoc();
 } else {
     die("User tidak ditemukan!");
 }
 
-// Jika form disubmit
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    if (!isset($_POST['id'], $_POST['username'], $_POST['role'])) {
-        die("Data tidak lengkap!");
-    }
-
-    $id = $_POST['id'];
-    $username = $_POST['username'];
-    $role = $_POST['role'];
-
-    // Update data user di database
-    $sql = "UPDATE users SET username = ?, role = ? WHERE id = ?";
-    $stmt = $conn->prepare($sql);
-
-    if (!$stmt) {
-        die("Query gagal: " . $conn->error);
-    }
-
-    $stmt->bind_param("ssi", $username, $role, $id);
-
-    if ($stmt->execute()) {
-        header("Location: admin_dashboard.php?message=User berhasil diperbarui!");
-        exit();
-    } else {
-        echo "Gagal memperbarui data!";
-    }
-}
+// Pastikan variabel tidak null sebelum digunakan
+$username = isset($user['username']) ? $user['username'] : '';
+$role = isset($user['role']) ? $user['role'] : '';
 ?>
+
 
 <!DOCTYPE html>
 <html lang="id">
@@ -73,32 +51,86 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit User</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: rgb(65, 148, 243);
+            font-family: Arial, sans-serif;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 350px;
+        }
+        h2 {
+            font-size: 22px;
+        }
+        .form-group {
+            text-align: left;
+            margin-bottom: 15px;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .btn {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #625bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background: #5145cd;
+        }
+        .btn-secondary {
+            background: #888;
+        }
+        .btn-secondary:hover {
+            background: #666;
+        }
+    </style>
 </head>
 <body>
-
-<div class="container mt-5">
-    <h2>Edit User</h2>
-    <form action="edit_user.php?id=<?php echo $user['id']; ?>" method="POST">
-        <input type="hidden" name="id" value="<?php echo $user['id']; ?>">
-
-        <div class="mb-3">
-            <label for="username" class="form-label">Username</label>
-            <input type="text" name="username" class="form-control" value="<?php echo htmlspecialchars($user['username']); ?>" required>
-        </div>
-
-        <div class="mb-3">
-            <label for="role" class="form-label">Role</label>
-            <select name="role" class="form-control">
-                <option value="user" <?php if ($user['role'] == 'user') echo 'selected'; ?>>User</option>
-                <option value="admin" <?php if ($user['role'] == 'admin') echo 'selected'; ?>>Admin</option>
-            </select>
-        </div>
-
-        <button type="submit" class="btn btn-success">Simpan</button>
-        <a href="admin_dashboard.php" class="btn btn-secondary">Batal</a>
-    </form>
-</div>
-
+    <div class="card">
+        <h2>Edit User</h2>
+        <form action="edit_user.php?id=<?php echo $user['id']; ?>" method="POST">
+            <input type="hidden" name="id" value="<?php echo $user['id']; ?>">
+            
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" name="username" value="<?php echo htmlspecialchars($user['username']); ?>" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="role">Role</label>
+                <select name="role">
+                    <option value="user" <?php if ($user['role'] == 'user') echo 'selected'; ?>>User</option>
+                    <option value="admin" <?php if ($user['role'] == 'admin') echo 'selected'; ?>>Admin</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn">Simpan</button>
+            <a href="admin_dashboard.php" class="btn btn-secondary">Batal</a>
+        </form>
+    </div>
 </body>
 </html>
